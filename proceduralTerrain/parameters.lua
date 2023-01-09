@@ -1,5 +1,7 @@
 local params = {}
 
+-- A not very well specified list of variables which control the rest of the program.
+
 -- Misc
 
 params.enableWarningMessages = true
