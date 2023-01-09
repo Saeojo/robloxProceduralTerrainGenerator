@@ -3,6 +3,7 @@ local perlinNoise = {}
 local _2dArrLib = require(script.Parent:WaitForChild("2dArrayLib"))
 local params = require(script.Parent.Parent.Parent:WaitForChild("parameters"))
 
+-- Gets 2d array of perlin noise based on parameters, a specified position, and roblox's perlin noise function.
 function perlinNoise.getNoise(xPos,yPos)
 	local res = params.resolution+1
 	local function generate2d(samplesPerInt,x,y)
