@@ -4,6 +4,7 @@ local params = require(script.Parent.Parent:WaitForChild("parameters"))
 local precision = 1000000
 
 -- Using Quasiduck's FillWedge
+-- Base function to generate terrain into the world.
 function terrainGenerator.fillWedge(wedgeCFrame, wedgeSize, material)
 	local terrain = workspace.Terrain
 	local Zlen, Ylen = wedgeSize.Z, wedgeSize.Y
@@ -37,6 +38,8 @@ function terrainGenerator.fillWedge(wedgeCFrame, wedgeSize, material)
 end
 
 -- FIX - does not take into account rotation -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-- The chunks are made up of many small triangles. This function gets the material (e.g. snow, grass, etc.) of a polygon given it's
+-- position and orientation, which is given by roblox's CFrame. Altitude, angle, the parameters script, and some randomness are factored in.
 function getMaterial(cf)
 	local material = params.defaultMaterial
 	
@@ -67,6 +70,7 @@ function getMaterial(cf)
 	return material
 end
 -- WARNING! Large triangles may result in exceeding max Region3 area
+-- Generates a water chunk between sea level and the altitude of the polygon for a terrain triangle, pretty self-explanatory.
 function generateWater(a,b,c,d,delete)
 	local scale = params.scale.Y
 	local orig = params.origin.Y
@@ -86,6 +90,9 @@ function generateWater(a,b,c,d,delete)
 	end
 end
 
+-- An absolute amalgamation of spaghetti code, this monster parses the weights of the foliage groups and parameters, determines if foliage will spawn
+-- via a weighted random selection, then spawns it in the correct location. Obviously, this should have been split up into multiple functions,
+-- but I wasn't the best programmer back then.
 function terrainGenerator.spawnFoliage(cf,material,noisePos,delete)
 	local foliageFolder = workspace:FindFirstChild("foliageFolder")
 	if delete == true then
@@ -224,6 +231,7 @@ function terrainGenerator.spawnFoliage(cf,material,noisePos,delete)
 	end
 end
 -- Must be right triangle only, and 'a' must be the vertex at the 90 degree angle
+-- Creates a terrain triangle from a few coordinates using fillWedge(). Recycled from my rennovation of the 3d model to terrain plugin.
 function terrainGenerator.drawVoxelPolygon(a,b,c,material)
 	local p = (b+c)/2
 	local up,ba = (b-a).unit,-(c-a).unit
@@ -242,12 +250,14 @@ local res = params.resolution
 local orig = params.origin
 local scale = params.scale
 local rot = params.rotation
+-- Generates a chunk of terrain by subdividing the area into a grid, then filling it in with terrain triangles.
 function terrainGenerator.generate(noise,noisePos,delete)
 	local pos = orig+Vector3.new(
 		noisePos.X*res*scale.X, 0,
 		noisePos.Y*res*scale.Z)
 	for i = 1, #noise-1 do
 		for j = 1, #noise[1]-1 do
+			-- math stuff
 			local a = Vector3.new(
 				(i-1)*scale.X+pos.X,
 				noise[i][j]*scale.Y+pos.Y,
@@ -273,10 +283,13 @@ function terrainGenerator.generate(noise,noisePos,delete)
 			if delete == true then
 				material = Enum.Material.Air
 			end
+			-- generate terrain triangles
 			local cf1, material1 = terrainGenerator.drawVoxelPolygon(a,b,c,material)
 			local cf2, material2 = terrainGenerator.drawVoxelPolygon(d,b,c,material)
+			-- spawn foliage
 			terrainGenerator.spawnFoliage(cf1,material1,noisePos,delete)
 			terrainGenerator.spawnFoliage(cf2,material2,noisePos,delete)
+			-- maybe spawn water
 			if params.waterLevel[1] == true then
 				generateWater(a,b,c,d,delete)
 			end
