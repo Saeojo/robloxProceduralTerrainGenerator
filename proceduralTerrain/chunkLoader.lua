@@ -15,6 +15,11 @@ local precision = 1000
 
 -- These values contain "grid position", which in this case is the unit value that is used to
 -- get the position in the game, and on the noise chart so each chunk can be placed perfectly in position.
+
+-- Chunks are all the actually loaded chunks. unloadedChunks are chunks directly adjacent to all chunks but not already loaded. This way, unloadedChunks
+-- should create a border around all chunks. I forgot why exactly this structure is in place, but I assume it's to reduce the number of holes in chunk
+-- loading, as all new chunks must be connected to an already created chunk. The below two functions, updateChunkArrs_Add/Delete, manage the two arrays
+-- to uphold this ideal when adding/deleting chunks.
 local chunks = {}
 local unloadedChunks = {
 	Vector2.new(0,0)
@@ -121,6 +126,7 @@ function updateChunkArrs_Delete(index)
 	end
 end
 
+-- All chunks within a certain radius from any player will be loaded. All chunks outside of these radii will be deleted.
 while true do
 	-- For every player
 	for i, v in pairs(players:GetChildren()) do
